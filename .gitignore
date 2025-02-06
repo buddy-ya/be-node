@@ -1,0 +1,59 @@
+# Node.js 관련
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 환경 변수 설정 파일
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 로그 파일
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 빌드 결과물
+dist/
+build/
+coverage/
+.out/
+.next/
+
+# 시스템 파일
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# PM2 관련
+pm2.log
+pm2.pid
+pids/
+logs/
+
+# Express 특정
+/uploads/
+public/uploads/
+public/temp/
+tmp/
+temp/
+
+# Git 관련
+.git/
+
+# 배포 관련
+*.bak
+*.tar.gz
