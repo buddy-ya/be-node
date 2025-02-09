@@ -1,19 +1,18 @@
+/**
+ * @file SocketAuth.js
+ * @description Socket.IO 핸드쉐이크 단계에서 JWT 토큰을 검증하는 미들웨어.
+ */
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../config/jwt');
+const { JWT_SECRET } = require('../config/jwt'); // JWT_SECRET이 base64로 인코딩된 문자열이라고 가정
+const TokenError = require('../common/exception/TokenError');
+const TokenErrorType = require('../common/exception/TokenErrorType');
 
 class SocketAuth {
-  /**
-   * Socket.IO 핸드쉐이크 단계에서 JWT 토큰을 검증하고,
-   * 디코드된 객체에서 userId 필드를 콘솔에 출력합니다.
-   *
-   * @param {object} socket - Socket.IO 소켓 객체
-   * @param {function} next - 다음 미들웨어로 전달하는 콜백 함수
-   */
   verify(socket, next) {
     let token = socket.handshake.headers.authorization;
+    
     if (!token) {
-      console.error('[SocketAuth] No token provided');
-      return next(new Error('Authentication error: No token provided'));
+      return next(new TokenError(TokenErrorType.EMPTY_CLAIMS));
     }
     
     // Bearer 접두사가 있다면 제거
@@ -21,22 +20,25 @@ class SocketAuth {
       token = token.slice(7).trim();
     }
     token = token.trim();
-
-    console.info('[SocketAuth] Received token:', token);
+    
+    
     try {
       // Base64로 인코딩된 JWT_SECRET을 Buffer로 변환하여 사용
       const secretKey = Buffer.from(JWT_SECRET, 'base64');
       const decoded = jwt.verify(token, secretKey, { algorithms: ['HS256'] });
-      console.info('[SocketAuth] Decoded token:', decoded);
-      console.info('[SocketAuth] userId:', decoded.userId);
-      
-      // 검증 성공 후 decoded 값을 socket 객체에 저장
+       // 검증 성공 후 decoded 값을 socket 객체에 저장
       socket.decoded = decoded;
-      
       return next();
-    } catch (error) {
-      console.error('[SocketAuth] Error verifying token:', error);
-      return next(new Error('Authentication error: ' + error.message));
+    } catch (error) {      
+      // JWT 토큰 관련 오류에 따라 적절한 TokenError를 생성합니다.
+      if (error.name === 'TokenExpiredError') {
+        return next(new TokenError(TokenErrorType.EXPIRED_TOKEN));
+      } else if (error.name === 'JsonWebTokenError') {
+        return next(new TokenError(TokenErrorType.INVALID_TOKEN));
+      } else {
+        // 그 외의 에러는 기본적으로 INVALID_TOKEN 처리
+        return next(new TokenError(TokenErrorType.INVALID_TOKEN));
+      }
     }
   }
 }
