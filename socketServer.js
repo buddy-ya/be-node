@@ -16,7 +16,8 @@ const io = new Server(server);
 // Socket.IO 인증 미들웨어 불러오기
 const socketAuthInterceptor = require('./middleware/SocketAuthInterceptor');
 
-// 동적 네임스페이스 생성: URL이 "/ws/chat/{roomId}" 형태인 경우에만 연결 허용
+// 동적 네임스페이스 생성: URL이 "/ws/chat" 형식으로 설정
+// (쿼리 파라미터로 roomId를 전달하는 방식으로 변경)
 const chatNamespace = io.of('/ws/chat');
 
 // 네임스페이스에 인증 미들웨어 적용
@@ -27,7 +28,15 @@ chatNamespace.use((socket, next) => {
 // 연결 성공 시 이벤트 핸들러 등록
 chatNamespace.on('connection', (socket) => {
   console.log(`Socket connected in namespace ${socket.nsp.name}: studentId=${socket.studentId}, roomId=${socket.roomId}`);
-  // 이후 추가 이벤트 핸들러 등록 가능 (메시지 처리, disconnect 등)
+  
+  // 클라이언트를 해당 방에 참여시키기 (roomId는 문자열로 변환)
+  socket.join(socket.roomId.toString());
+
+  // 'message' 이벤트 핸들러 등록
+  socket.on('message', (data) => {
+    const ChatService = require('./service/ChatService'); // 상대경로에 주의 (예: './service/ChatService')
+    ChatService.handleMessage(socket, data);
+  });
 });
 
 // 하나의 HTTP 서버에서 Express와 Socket.IO 모두 실행
