@@ -14,7 +14,7 @@ const socketAuthInterceptor = require('../middleware/SocketAuthInterceptor');
 
 // 네임스페이스를 정적으로 설정 (쿼리 파라미터 방식 사용)
 // 클라이언트는 "ws://localhost:3000/ws/chat?roomId=1" 형식으로 연결합니다.
-const chatNamespace = io.of('/ws/chat');
+const chatNamespace = io.of('node/ws/chat');
 
 // 네임스페이스에 인증 미들웨어 적용
 chatNamespace.use((socket, next) => {
