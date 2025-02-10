@@ -1,5 +1,5 @@
 // repository/ChatRepository.js
-const db = require('../config/db'); // mysql2/promise 연결 풀
+const db = require('../config/dbConfig'); // mysql2/promise 연결 풀
 
 class ChatRepository {
   /**

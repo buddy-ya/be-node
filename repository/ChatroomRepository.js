@@ -1,5 +1,5 @@
 // repository/ChatroomRepository.js
-const db = require('../config/db'); // MySQL 연결 풀
+const db = require('../config/dbConfig'); // MySQL 연결 풀
 
 class ChatroomRepository {
   /**

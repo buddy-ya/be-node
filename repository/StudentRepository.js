@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../config/dbConfig');
 const Student = require('../model/Student');
 
 class StudentRepository {

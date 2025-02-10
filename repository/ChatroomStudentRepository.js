@@ -1,5 +1,5 @@
 // repository/ChatroomStudentRepository.js
-const db = require('../config/db');
+const db = require('../config/dbConfig');
 
 class ChatroomStudentRepository {
   /**
