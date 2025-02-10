@@ -3,7 +3,7 @@
  * @description Socket.IO 핸드셰이크 단계에서 JWT 토큰 검증 미들웨어 (Step 1).
  */
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../config/jwt'); // JWT_SECRET은 Base64로 인코딩된 문자열이라고 가정
+const { JWT_SECRET } = require('../config/jwtConfig'); // JWT_SECRET은 Base64로 인코딩된 문자열이라고 가정
 const TokenError = require('../common/exception/TokenError');
 const TokenErrorType = require('../common/exception/TokenErrorType');
 
