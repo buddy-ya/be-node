@@ -7,7 +7,10 @@ dotenv.config();
 
 const app = require('../app'); // 상위 디렉터리에 위치한 Express 앱
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  pingInterval: 25000, // 25초마다 ping 전송
+  pingTimeout: 60000   // 60초 동안 pong 응답이 없으면 연결 해제
+});
 
 // 상위 디렉터리의 middleware 폴더에서 SocketAuthInterceptor 불러오기
 const socketAuthInterceptor = require('../middleware/SocketAuthInterceptor');

@@ -26,6 +26,17 @@ class ChatroomStudentRepository {
     
     await db.execute(query, params);
   }
+
+    /**
+   * 해당 채팅방에 속한 모든 학생 ID를 조회합니다.
+   * @param {number} roomId 
+   * @returns {Promise<Array<number>>} 전체 학생 ID 배열
+   */
+    async getAllStudentIds(roomId) {
+      const query = `SELECT student_id FROM chatroom_student WHERE chatroom_id = ?`;
+      const [rows] = await db.execute(query, [roomId]);
+      return rows.map(row => row.student_id);
+    }
 }
 
 module.exports = new ChatroomStudentRepository();
