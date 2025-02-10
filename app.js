@@ -4,8 +4,11 @@ const app = express();
 
 app.use(express.json());
 
-const studentRoutes = require('./routes/studentRoute');
-app.use('/students', studentRoutes);
+const baseRoute = require('./routes/baseRoute');
+app.use('/node', baseRoute)
+
+const studentRoute = require('./routes/studentRoute');
+app.use('/node/students', studentRoute);
 
 // 전역 에러 핸들러
 app.use((err, req, res, next) => {

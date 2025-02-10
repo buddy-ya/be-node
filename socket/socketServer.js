@@ -41,7 +41,7 @@ chatNamespace.on('connection', (socket) => {
 });
 
 // 하나의 HTTP 서버에서 Express와 Socket.IO를 모두 실행합니다.
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
