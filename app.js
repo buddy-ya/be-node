@@ -1,15 +1,28 @@
+// app.js
 const express = require('express');
 const app = express();
 
 app.use(express.json());
 
-// 라우터 설정
-const studentRouter = require('./routes/students');
-app.use('/students', studentRouter);
+const baseRoute = require('./routes/baseRoute');
+app.use('/node', baseRoute)
 
-// 에러 핸들러
+const studentRoute = require('./routes/studentRoute');
+app.use('/node/students', studentRoute);
+
+// 전역 에러 핸들러
 app.use((err, req, res, next) => {
-    res.status(err.status || 500).json({ error: err.message });
+  console.error(err);
+  if (err instanceof require('./common/exception/BaseError')) {
+    return res.status(err.status).json({
+      errorCode: err.errorCode,
+      message: err.message,
+    });
+  }
+  res.status(500).json({
+    errorCode: 0,
+    message: 'Internal Server Error',
+  });
 });
 
-module.exports = app;  // ✅ 올바르게 내보내기
+module.exports = app;
