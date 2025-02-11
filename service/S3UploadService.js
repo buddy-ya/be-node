@@ -5,8 +5,8 @@ const { v4: uuidv4 } = require('uuid');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const bucketName = process.env.CLOUD_AWS_S3_BUCKET;  
-const defaultUrl = process.env.CLOUD_AWS_S3_URL;       
+const bucketName = process.env.CLOUD_AWS_S3_BUCKET;   
+const defaultUrl = process.env.CLOUD_AWS_S3_URL;        
 
 /**
  * 파일 업로드 함수
@@ -16,8 +16,11 @@ const defaultUrl = process.env.CLOUD_AWS_S3_URL;
  */
 async function uploadFile(dir, file) {
   try {
+    // dir에서 선행하는 슬래시 제거 (예: "/chats" -> "chats")
+    const normalizedDir = dir.replace(/^\/+/, '');
     const fileName = generateFileName(file);
-    const key = `${dir}/${fileName}`.replace('//', '/');
+    // Key: normalizedDir과 파일 이름 결합
+    const key = `${normalizedDir}/${fileName}`;
     
     const command = new PutObjectCommand({
       Bucket: bucketName,
@@ -29,7 +32,8 @@ async function uploadFile(dir, file) {
     });
     
     await s3Client.send(command);
-    return `${defaultUrl}${key}`;
+    // 반환 URL은 defaultUrl 뒤에 "/"와 normalizedDir, 파일 이름을 조합
+    return `${defaultUrl}/${key}`;
   } catch (error) {
     throw new Error(`File upload error: ${error.message}`);
   }
@@ -42,8 +46,9 @@ async function uploadFile(dir, file) {
  * @returns {Promise<void>}
  */
 async function deleteFile(dir, fileUrl) {
+  const normalizedDir = dir.replace(/^\/+/, '');
   const fileName = extractFileName(fileUrl);
-  const key = `${dir}/${fileName}`.replace('//', '/');
+  const key = `${normalizedDir}/${fileName}`;
   const command = new DeleteObjectCommand({
     Bucket: bucketName,
     Key: key,

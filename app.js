@@ -10,7 +10,7 @@ app.use('/node', baseRoute)
 const studentRoute = require('./routes/studentRoute');
 app.use('/node/students', studentRoute);
 
-const chatImageRoute = require('./routes/chatImageRoute');
+const chatImageRoute = require('./routes/chatRoute');
 app.use('/node/rooms', chatImageRoute);
 
 // 전역 에러 핸들러

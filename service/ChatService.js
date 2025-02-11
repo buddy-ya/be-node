@@ -1,6 +1,7 @@
 const ChatRepository = require('../repository/ChatRepository');
 const ChatroomRepository = require('../repository/ChatroomRepository');
 const ChatroomStudentRepository = require('../repository/ChatroomStudentRepository');
+const Chat = require('../model/Chat'); // Chat 모델을 활용
 
 /**
  * MySQL DATETIME 형식 (YYYY-MM-DD HH:MM:SS) 타임스탬프 생성 함수
@@ -37,6 +38,7 @@ class ChatService {
    */
   async handleMessageAndSave(socket, data, namespace) {
     const timestamp = getFormattedTimestamp();
+    // Chat 모델을 활용하여 메시지 객체 생성 (DB 컬럼명과 일치하도록 키 이름을 설정)
     const message = this.buildMessage(socket, data, timestamp);
 
     this.broadcastMessage(socket, message, timestamp);
@@ -60,16 +62,18 @@ class ChatService {
 
   /**
    * 메시지 객체를 생성합니다.
+   * Chat 모델을 사용하여 객체를 생성하면, 도메인 로직 확장 및 유효성 검증이 용이합니다.
    */
   buildMessage(socket, data, timestamp) {
-    return {
+    return new Chat({
+      // id는 아직 DB에서 생성되므로 생략
+      chatroom_id: socket.roomId,
+      student_id: socket.studentId,
       type: data.type || 'TALK',  // 기본값 TALK
-      chatroomId: socket.roomId,
-      studentId: socket.studentId,
-      tempId: data.tempId,
       message: data.message || "",
-      createdDate: timestamp  // DB 컬럼: create_date
-    };
+      created_date: timestamp  // DB 컬럼: create_date
+      // 필요 시 tempId도 별도로 관리할 수 있으나, 모델에 포함되어 있지 않다면 별도 필드로 전달하거나 확장 가능
+    });
   }
 
   /**
@@ -80,7 +84,7 @@ class ChatService {
       type: message.type,
       roomId: socket.roomId,
       userId: socket.studentId,
-      tempId: message.tempId,
+      // tempId가 필요하다면 data로 전달하거나 모델에 포함시키는 방법 고려
       message: message.message,
       time: timestamp
     });
