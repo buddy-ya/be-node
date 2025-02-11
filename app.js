@@ -10,6 +10,9 @@ app.use('/node', baseRoute)
 const studentRoute = require('./routes/studentRoute');
 app.use('/node/students', studentRoute);
 
+const chatImageRoute = require('./routes/chatImageRoute');
+app.use('/node/rooms', chatImageRoute);
+
 // 전역 에러 핸들러
 app.use((err, req, res, next) => {
   console.error(err);
