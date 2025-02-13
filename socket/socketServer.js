@@ -2,8 +2,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const dotenv = require('dotenv');
-dotenv.config();
+
 
 const app = require('../app'); // 상위 디렉터리에 위치한 Express 앱
 const server = http.createServer(app);
@@ -48,3 +47,5 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports = chatNamespace;

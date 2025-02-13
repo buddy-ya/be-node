@@ -40,21 +40,16 @@ class ChatroomStudentRepository {
    * @param {number|string} senderId 
    * @param {Array<number>} connectedStudentIds 
    */
-  async updateUnreadCount(roomId, senderId, connectedStudentIds = []) {
-    let query = `
+  async updateUnreadCount(roomId, senderId, notConnectedStudentIds = []) {
+    if (notConnectedStudentIds.length === 0) return;
+    const placeholders = notConnectedStudentIds.map(() => '?').join(', ');
+    const query = `
       UPDATE chatroom_student
       SET unread_count = unread_count + 1
       WHERE chatroom_id = ? 
-        AND student_id <> ?
+        AND student_id IN (${placeholders})
     `;
-    let params = [roomId, senderId];
-
-    if (connectedStudentIds.length > 0) {
-      const placeholders = connectedStudentIds.map(() => '?').join(', ');
-      query += ` AND student_id NOT IN (${placeholders})`;
-      params = params.concat(connectedStudentIds);
-    }
-    
+    const params = [roomId, ...notConnectedStudentIds];
     await db.execute(query, params);
   }
 }
