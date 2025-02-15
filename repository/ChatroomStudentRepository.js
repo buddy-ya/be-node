@@ -2,6 +2,16 @@
 const db = require('../config/dbConfig');
 
 class ChatroomStudentRepository {
+
+  /**
+   * 채팅방-사용자 레코드의 exited 플래그를 true로 업데이트합니다.
+   * @param {number|string} recordId 
+   */
+    async updateExited(recordId) {
+      const query = `UPDATE chatroom_student SET exited = ? WHERE id = ?`;
+      await db.execute(query, [true, recordId]);
+    }
+
   /**
    * 지정된 채팅방에 속한 모든 학생 ID를 조회합니다.
    * @param {number|string} roomId 

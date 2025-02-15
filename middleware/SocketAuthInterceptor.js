@@ -36,13 +36,8 @@ class SocketAuthInterceptor {
       // JWT 토큰 검증 (알고리즘 HS256 사용)
       const decoded = jwt.verify(token, secretKey, { algorithms: ['HS256'] });
       const studentId = decoded.studentId;
-      console.log("Decoded studentId:", studentId);
       
-      if (!socket.handshake.query || !socket.handshake.query.roomId) {
-        return next(new TokenError(TokenErrorType.INVALID_MEMBER_ID));
-      }
       const roomId = parseInt(socket.handshake.query.roomId, 10);
-      console.log("Extracted roomId:", roomId);
       
       socket.decoded = decoded;
       socket.studentId = studentId;
@@ -52,11 +47,8 @@ class SocketAuthInterceptor {
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         return next(new TokenError(TokenErrorType.EXPIRED_TOKEN));
-      } else if (error.name === 'JsonWebTokenError') {
-        return next(new TokenError(TokenErrorType.INVALID_TOKEN));
-      } else {
-        return next(new TokenError(TokenErrorType.INVALID_TOKEN));
       }
+      return next(new TokenError(TokenErrorType.INVALID_TOKEN));
     }
   }
 }

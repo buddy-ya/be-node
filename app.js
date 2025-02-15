@@ -13,8 +13,8 @@ app.use('/node', baseRoute);
 const studentRoute = require('./routes/studentRoute');
 app.use('/node/students', studentRoute);
 
-const chatImageRoute = require('./routes/chatRoute');
-app.use('/node/rooms', httpAuthInterceptor, chatImageRoute);
+const chatRoute = require('./routes/chatRoute');
+app.use('/node/rooms', httpAuthInterceptor, chatRoute);
 
 // 전역 에러 핸들러
 app.use((err, req, res, next) => {

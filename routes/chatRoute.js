@@ -13,5 +13,4 @@ const upload = multer({ storage: multer.memoryStorage() });
  * 클라이언트는 FormData로 "image" 필드에 파일과 "tempId" 등을 전송합니다.
  */
 router.post('/:roomId/image', upload.single('image'), ChatController.uploadImages);
-
 module.exports = router;

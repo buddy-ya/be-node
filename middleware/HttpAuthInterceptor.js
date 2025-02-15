@@ -37,11 +37,8 @@ function httpAuthInterceptor(req, res, next) {
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
       return next(new TokenError(TokenErrorType.EXPIRED_TOKEN));
-    } else if (error.name === 'JsonWebTokenError') {
-      return next(new TokenError(TokenErrorType.INVALID_TOKEN));
-    } else {
-      return next(new TokenError(TokenErrorType.INVALID_TOKEN));
-    }
+    } 
+    return next(new TokenError(TokenErrorType.INVALID_TOKEN));
   }
 }
 
