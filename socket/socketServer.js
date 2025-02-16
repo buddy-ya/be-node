@@ -30,15 +30,20 @@ chatNamespace.on('connection', (socket) => {
   
   // 클라이언트가 채팅방에 입장할 때 호출하는 'room_in' 이벤트  
   // 클라이언트는 { roomId: <roomId> } 형태의 payload를 전달해야 합니다.
-  socket.on('room_in', async (data) => {
+  socket.on('room_in', async (data, callback) => {
     try {
       const roomId = parseInt(data.roomId, 10);
       socket.join(roomId.toString());
       socket.roomId = roomId; // 클라이언트에서 보내는 roomId로 socket 업데이트
       console.log(`Student ${socket.studentId} joined room ${roomId}`);
-      // (옵션) 다른 사용자에게 입장 알림 전송 가능
+      if (callback && typeof callback === 'function') {
+        callback({ status: 'success' });
+      }
     } catch (err) {
       console.error("Error joining room:", err);
+      if (callback && typeof callback === 'function') {
+        callback({ status: 'error' });
+      }
     }
   });
   
@@ -55,21 +60,28 @@ chatNamespace.on('connection', (socket) => {
     } catch (err) {
       console.error("Error handling message:", err);
       if (callback && typeof callback === 'function') {
-        callback({ status: 'error', message: 'Message processing failed' });
+        callback({ status: 'error' });
       }
     }
   });
 
   // 'room_out' 이벤트 핸들러 (data에 roomId 포함)
-  socket.on('room_out', async (data) => {
+  // 클라이언트는 { roomId: <roomId> } 형태의 payload를 전달합니다.
+  socket.on('room_out', async (data, callback) => {
     try {
       const roomId = parseInt(data.roomId, 10);
       await ChatService.leaveChatroom(roomId, { studentId: socket.studentId });
       socket.leave(roomId.toString());
       console.log(`Student ${socket.studentId} leaving room ${roomId}`);
       socket.to(roomId.toString()).emit('roomOut', { senderId: socket.studentId });
+      if (callback && typeof callback === 'function') {
+        callback({ status: 'success' });
+      }
     } catch (err) {
       console.error("Error leaving chatroom:", err);
+      if (callback && typeof callback === 'function') {
+        callback({ status: 'error' });
+      }
     }
   });
 });
