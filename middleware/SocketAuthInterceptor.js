@@ -10,8 +10,8 @@ const TokenErrorType = require('../common/exception/TokenErrorType');
 
 class SocketAuthInterceptor {
   /**
-   * Socket.IO 핸드셰이크 단계에서 JWT 토큰을 검증하고, 
-   * 사용자 ID 및 방 번호(roomId)를 쿼리 파라미터에서 추출하여 소켓 객체에 저장합니다.
+   * Socket.IO 핸드셰이크 단계에서 JWT 토큰을 검증하고,
+   * 사용자 ID(studentId)를 헤더에서 추출한 토큰을 이용해 확인합니다.
    *
    * @param {object} socket - Socket.IO 소켓 객체
    * @param {function} next - 다음 미들웨어로 전달하는 콜백 함수
@@ -37,11 +37,9 @@ class SocketAuthInterceptor {
       const decoded = jwt.verify(token, secretKey, { algorithms: ['HS256'] });
       const studentId = decoded.studentId;
       
-      const roomId = parseInt(socket.handshake.query.roomId, 10);
-      
+      // roomId 관련 코드는 제거 (이제 payload에서 전달됨)
       socket.decoded = decoded;
       socket.studentId = studentId;
-      socket.roomId = roomId;
       
       return next();
     } catch (error) {
