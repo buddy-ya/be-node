@@ -65,6 +65,25 @@ chatNamespace.on('connection', (socket) => {
     }
   });
 
+  // 'room_back' 이벤트: 채팅방 UI를 벗어나 뒤로가기 할 때 호출
+  // 클라이언트는 { roomId: <roomId> } 형태의 payload를 전달합니다.
+  socket.on('room_back', (data, callback) => {
+    try {
+      const roomId = parseInt(data.roomId, 10);
+      socket.leave(roomId.toString());
+      console.log(`Student ${socket.studentId} left room ${roomId} using room_back event`);
+      if (callback && typeof callback === 'function') {
+        callback({ status: 'success' });
+      }
+    } catch (err) {
+      console.error("Error processing room_back:", err);
+      if (callback && typeof callback === 'function') {
+        callback({ status: 'error' });
+      }
+    }
+  });
+
+
   // 'room_out' 이벤트 핸들러 (data에 roomId 포함)
   // 클라이언트는 { roomId: <roomId> } 형태의 payload를 전달합니다.
   socket.on('room_out', async (data, callback) => {
