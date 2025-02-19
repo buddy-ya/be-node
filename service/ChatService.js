@@ -5,6 +5,7 @@ const ChatroomStudentRepository = require('../repository/ChatroomStudentReposito
 const S3UploadService = require('../service/S3UploadService');
 const Chat = require('../model/Chat');
 const chatNamespace = require("../socket/socketServer");
+const { expo } = require('../config/expoClient');  // ✅ 이 부분 추가
 
 /**
  * MySQL DATETIME 형식 (YYYY-MM-DD HH:MM:SS) 타임스탬프 생성 함수
