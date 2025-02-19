@@ -275,7 +275,10 @@ class ChatService {
         to: expoToken,
         title,
         body,
-        data: { chatroomId }
+        data: {
+          chatroomId,
+          type: "CHAT"
+        }
       };
 
       // 6. 알림 전송
