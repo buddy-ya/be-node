@@ -6,6 +6,8 @@ const S3UploadService = require('../service/S3UploadService');
 const Chat = require('../model/Chat');
 const chatNamespace = require("../socket/socketServer");
 const { expo } = require('../config/expoClient');
+const NotificationRepository = require('../repository/NotificationRepository');
+const StudentRepository = require('../repository/StudentRepository');
 
 /**
  * MySQL DATETIME 형식 (YYYY-MM-DD HH:MM:SS) 타임스탬프 생성 함수
@@ -64,7 +66,7 @@ class ChatService {
     // 연결되지 않은 학생들에게 각각 푸시 알림 전송
     for (const studentId of notConnectedStudentIds) {
       const student = await ChatroomStudentRepository.findByChatroomAndStudentId(socket.roomId, studentId);
-      if (student && student.exited === 0) {
+      if (student && student.exited === false) {
         await this.sendPushNotification(studentId, socket.roomId, data.message);
       }
     }
@@ -223,7 +225,7 @@ class ChatService {
 
     for (const studentId of notConnectedStudentIds) {
       const student = await ChatroomStudentRepository.findByChatroomAndStudentId(socket.roomId, studentId);
-      if (student && student.exited === 0) {
+      if (student && student.exited === false) {
         await this.sendPushNotification(studentId, socket.roomId, data.message);
       }
     }
@@ -268,21 +270,21 @@ class ChatService {
       }
 
       // 2. 수신자의 ExpoToken 조회
-      const expoToken = await notificationRepository.getExpoTokenByStudentId(receiverId);
+      const expoToken = await NotificationRepository.getExpoTokenByStudentId(receiverId);
       if (!expoToken) {
         console.warn(`${receiverId}의 Expo토큰이 존재하지 않습니다.`);
         return;
       }
 
       // 3. 수신자의 학생 정보 조회
-      const receiver = await studentRepository.getStudentById(receiverId);
+      const receiver = await StudentRepository.getStudentById(receiverId);
       if (!receiver) {
         console.warn(`수신자의 학생 정보가 존재하지 않습니다.`);
         return;
       }
 
       // 4. 한국인 여부에 따라 제목 설정
-      const title = receiver.isKorean ? "새로운 메시지가 도착했습니다." : "New Message";
+      const title = receiver.korean ? "새로운 메시지가 도착했습니다." : "New Message";
       const body = `${receiver.name} : ${message}`;
 
       // 5. Expo Push Notification 메시지 생성
