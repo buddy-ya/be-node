@@ -5,6 +5,7 @@ const ChatroomStudentRepository = require('../repository/ChatroomStudentReposito
 const S3UploadService = require('../service/S3UploadService');
 const Chat = require('../model/Chat');
 const chatNamespace = require("../socket/socketServer");
+const { expo } = require('../config/expoClient');
 
 /**
  * MySQL DATETIME 형식 (YYYY-MM-DD HH:MM:SS) 타임스탬프 생성 함수
@@ -13,7 +14,7 @@ const chatNamespace = require("../socket/socketServer");
 function getFormattedTimestamp() {
   const date = new Date();
   const pad = (num, size = 2) => String(num).padStart(size, '0');
-  
+
   const year = date.getFullYear();
   const month = pad(date.getMonth() + 1);
   const day = pad(date.getDate());
@@ -21,17 +22,17 @@ function getFormattedTimestamp() {
   const minutes = pad(date.getMinutes());
   const seconds = pad(date.getSeconds());
   const milliseconds = pad(date.getMilliseconds(), 3);
-  
+
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}000`;
 }
 
 class ChatService {
   /**
    * 텍스트 메시지 처리 플로우:
-   * 1. 채팅(chat) 객체 생성  
-   * 2. 채팅 브로드캐스트  
-   * 3. DB 저장  
-   * 4. 채팅방 업데이트  
+   * 1. 채팅(chat) 객체 생성
+   * 2. 채팅 브로드캐스트
+   * 3. DB 저장
+   * 4. 채팅방 업데이트
    * 5. 연결되지 않은 학생(not connected)의 unread_count 업데이트
    *
    * @param {object} socket - Socket.IO 소켓 (studentId, roomId 설정됨)
@@ -42,27 +43,27 @@ class ChatService {
   async handleMessageAndSave(socket, data, namespace) {
     const timestamp = getFormattedTimestamp();
     const chat = this.buildChat(socket, data, timestamp);
-    
+
     this.broadcastChat(socket, chat, timestamp);
     await this.saveChat(chat);
-    
+
     await this.updateChatroomLastMessage(socket, chat, timestamp);
-    
+
     // 연결된 학생들의 ID 목록 조회
     const connectedStudentIds = await this.getConnectedStudentIds(namespace, socket.roomId);
-    
+
     // DB에 등록된 모든 학생 ID를 조회하고 중복 제거
     const allStudentIds = await ChatroomStudentRepository.getAllStudentIds(socket.roomId);
     const uniqueAllStudentIds = [...new Set(allStudentIds)];
-    
+
     // sender(studentId)와 연결된 학생들을 제외한 나머지가 unread_count 증가 대상
     const notConnectedStudentIds = uniqueAllStudentIds.filter(
       id => id !== socket.studentId && !connectedStudentIds.includes(id)
     );
     console.log('Students not connected in room:', notConnectedStudentIds);
-    
+
     await this.updateUnreadCount(socket, notConnectedStudentIds);
-    
+
     console.log(`Chat broadcasted and saved in room ${socket.roomId}:`, chat);
     return {
       id: chat.id,
@@ -70,7 +71,7 @@ class ChatService {
       type: chat.type,
       senderId: chat.studentId,
       message: chat.message,
-      tempId: data.tempId, 
+      tempId: data.tempId,
       createdDate: chat.createdDate
     };
   }
@@ -131,6 +132,8 @@ class ChatService {
       const s = namespace.sockets.get(id);
       if (s && s.studentId && !connectedStudentIds.includes(s.studentId)) {
         connectedStudentIds.push(s.studentId);
+      } else{// 상대방이 채팅방에 없을 경우에 알림을 보낸다.
+        await this.sendPushNotification(socket.studentId, socket.roomId, message.message);
       }
     }
     return connectedStudentIds;
@@ -145,8 +148,8 @@ class ChatService {
 
   /**
    * 채팅방 이미지 전송 처리 플로우:
-   * 1. S3에 이미지 업로드  
-   * 2. 채팅(chat) 객체 생성 (type: IMAGE, message: imageUrl, tempId 포함)  
+   * 1. S3에 이미지 업로드
+   * 2. 채팅(chat) 객체 생성 (type: IMAGE, message: imageUrl, tempId 포함)
    * 3. DB 저장, 채팅방 업데이트, 실시간 브로드캐스트, unread_count 업데이트
    *
    * @param {string|number} roomId - 채팅방 ID
@@ -156,10 +159,10 @@ class ChatService {
    */
   async chatUploadImage(roomId, userInfo, request) {
     const timestamp = getFormattedTimestamp();
-    
+
     // 1. 이미지 파일을 S3에 업로드하고 이미지 URL 획득
     const imageUrl = await S3UploadService.uploadFile('/chats', request.file);
-    
+
     // 2. 채팅(chat) 객체 생성 (클라이언트가 보낸 tempId 포함)
     const chatData = {
       chatroom_id: roomId,
@@ -170,14 +173,14 @@ class ChatService {
     };
 
     const chat = new Chat(chatData);
-    
+
     // 3. DB에 채팅 객체 저장 및 생성된 id 반영
     const chatId = await ChatRepository.save(chat);
     chat.id = chatId;
-    
+
     // 4. 채팅방의 마지막 메시지 업데이트 ("사진을 보냈습니다")
     await ChatroomRepository.updateLastMessage(roomId, "사진을 보냈습니다", timestamp);
-    
+
     // 5. 브로드캐스트 준비: 클라이언트가 요구하는 응답 형식으로 payload 구성
     const chatNamespace = require("../socket/socketServer");
 
@@ -190,7 +193,7 @@ class ChatService {
       message: chat.message,
       createdDate: chat.createdDate
     };
-    
+
     // 6. 동일 채팅방에 연결된 다른 소켓(송신자 제외)에게 브로드캐스트
     try {
       const sockets = await chatNamespace.in(roomId.toString()).fetchSockets();
@@ -202,7 +205,7 @@ class ChatService {
     } catch (err) {
       console.error("Error broadcasting image chat:", err);
     }
-    
+
     // 7. 연결되지 않은 학생들에 대해 unread_count 업데이트
     const connectedStudentIds = await this.getConnectedStudentIds(chatNamespace, roomId);
     const allStudentIds = await ChatroomStudentRepository.getAllStudentIds(roomId);
@@ -212,13 +215,13 @@ class ChatService {
     );
     console.log('Students not connected in room:', notConnectedStudentIds);
     await this.updateUnreadCount({ roomId: roomId, studentId: userInfo.studentId }, notConnectedStudentIds);
-    
+
     console.log(`Image chat created for room ${roomId}:`, chat);
-    
+
     // 8. 최종적으로 클라이언트가 요구하는 형식의 chat 객체를 반환
     return payload;
   }
-  
+
 
   /**
    * 채팅방 나가기 처리
@@ -232,6 +235,60 @@ class ChatService {
   async leaveChatroom(roomId, userInfo) {
     const chatroomStudent = await ChatroomStudentRepository.findByChatroomAndStudentId(roomId, userInfo.studentId);
     await ChatroomStudentRepository.updateExited(chatroomStudent.id);
+  }
+
+  /**
+   * 푸시 알림 전송
+   * @param {number} senderId - 메시지 발신자 ID
+   * @param {number} chatroomId - 채팅방 ID
+   * @param {string} message - 메시지 내용
+   */
+  async sendPushNotification(senderId, chatroomId, message) {
+    try {
+      // 1. 채팅방에서 수신자(receiverId) 찾기
+      const receiverId = await ChatroomStudentRepository.findReceiverId(chatroomId, senderId);
+      if (!receiverId) {
+        console.warn(`${chatroomId}채팅룸에 참여하고 있는 학생이 없습니다.`);
+        return;
+      }
+
+      // 2. 수신자의 ExpoToken 조회
+      const expoToken = await notificationRepository.getExpoTokenByStudentId(receiverId);
+      if (!expoToken) {
+        console.warn(`${receiverId}의 Expo토큰이 존재하지 않습니다.`);
+        return;
+      }
+
+      // 3. 수신자의 학생 정보 조회
+      const receiver = await studentRepository.getStudentById(receiverId);
+      if (!receiver) {
+        console.warn(`수신자의 학생 정보가 존재하지 않습니다.`);
+        return;
+      }
+
+      // 4. 한국인 여부에 따라 제목 설정
+      const title = receiver.isKorean ? "새로운 메시지가 도착했습니다." : "New Message";
+      const body = `${receiver.name} : ${message}`;
+
+      // 5. Expo Push Notification 메시지 생성
+      const pushMessage = {
+        to: expoToken,
+        title,
+        body,
+        data: {
+          chatroomId,
+          type: "CHAT"
+        }
+      };
+
+      // 6. 알림 전송
+      const response = await expo.sendPushNotificationsAsync([pushMessage]);
+      console.log(`${receiverId}에게 성공적으로 알림을 보냈습니다.`, response);
+
+    } catch (error) {
+      console.error(`알림을 보내는데 실패하였습니다.`, error);
+      // 알림이 실패해도 프로세스를 종료하지 않음
+    }
   }
 }
 

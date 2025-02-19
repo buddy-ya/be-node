@@ -62,6 +62,25 @@ class ChatroomStudentRepository {
     const params = [roomId, ...notConnectedStudentIds];
     await db.execute(query, params);
   }
+
+  /**
+   * 채팅방의 발신자(senderId)를 제외한 수신자(receiverId) 조회
+   * @param {number} roomId
+   * @param {number} senderId
+   * @returns {Promise<number|null>} - 수신자의 studentId 반환 (없으면 null)
+   */
+//   student_id <> ?
+// → student_id가 senderId와 다른 사용자만 선택 (즉, 보낸 사람 제외)
+  async findReceiverId(roomId, senderId) {
+    const query = `
+      SELECT student_id FROM chatroom_student
+      WHERE chatroom_id = ? AND student_id <> ?
+      LIMIT 1
+    `;
+    const [rows] = await db.execute(query, [roomId, senderId]);
+
+    return rows.length > 0 ? rows[0].student_id : null;
+  }
 }
 
 module.exports = new ChatroomStudentRepository();
