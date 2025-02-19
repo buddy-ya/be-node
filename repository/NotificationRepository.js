@@ -7,7 +7,7 @@ class NotificationRepository {
      * @returns {Promise<string|null>} - Expo 푸시 토큰 반환 (없으면 null)
      */
     async getExpoTokenByStudentId(studentId) {
-        const query = `SELECT token FROM expo_token WHERE student_id = ? LIMIT 1`;
+        const query = `SELECT token FROM expo_token WHERE student_id = ?`;
         const [rows] = await db.execute(query, [studentId]);
 
         return rows.length > 0 ? rows[0].token : null;
