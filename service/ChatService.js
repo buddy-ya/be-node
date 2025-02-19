@@ -60,6 +60,15 @@ class ChatService {
     const notConnectedStudentIds = uniqueAllStudentIds.filter(
       id => id !== socket.studentId && !connectedStudentIds.includes(id)
     );
+
+    // 연결되지 않은 학생들에게 각각 푸시 알림 전송
+    for (const studentId of notConnectedStudentIds) {
+      const student = await ChatroomStudentRepository.findByChatroomAndStudentId(socket.roomId, studentId);
+      if (student && student.exited === 0) {
+        await this.sendPushNotification(studentId, socket.roomId, data.message);
+      }
+    }
+
     console.log('Students not connected in room:', notConnectedStudentIds);
 
     await this.updateUnreadCount(socket, notConnectedStudentIds);
@@ -132,9 +141,7 @@ class ChatService {
       const s = namespace.sockets.get(id);
       if (s && s.studentId && !connectedStudentIds.includes(s.studentId)) {
         connectedStudentIds.push(s.studentId);
-      } else{// 상대방이 채팅방에 없을 경우에 알림을 보낸다.
-        await this.sendPushNotification(socket.studentId, socket.roomId, message.message);
-      }
+      } 
     }
     return connectedStudentIds;
   }
@@ -213,6 +220,14 @@ class ChatService {
     const notConnectedStudentIds = uniqueAllStudentIds.filter(
       id => id !== userInfo.studentId && !connectedStudentIds.includes(id)
     );
+
+    for (const studentId of notConnectedStudentIds) {
+      const student = await ChatroomStudentRepository.findByChatroomAndStudentId(socket.roomId, studentId);
+      if (student && student.exited === 0) {
+        await this.sendPushNotification(studentId, socket.roomId, data.message);
+      }
+    }
+
     console.log('Students not connected in room:', notConnectedStudentIds);
     await this.updateUnreadCount({ roomId: roomId, studentId: userInfo.studentId }, notConnectedStudentIds);
 
