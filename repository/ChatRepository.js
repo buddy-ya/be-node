@@ -1,5 +1,5 @@
 // repository/ChatRepository.js
-const db = require('../config/db'); // mysql2/promise 연결 풀
+const db = require('../config/dbConfig'); // mysql2/promise 연결 풀
 
 class ChatRepository {
   /**
@@ -9,7 +9,7 @@ class ChatRepository {
    */
   async save(chat) {
     const query = `
-      INSERT INTO chat (chatroom_id, student_id, type, message, create_date)
+      INSERT INTO chat (chatroom_id, student_id, type, message, created_date)
       VALUES (?, ?, ?, ?, ?)
     `;
     const params = [chat.chatroomId, chat.studentId, chat.type, chat.message, chat.createdDate];

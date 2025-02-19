@@ -1,5 +1,6 @@
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'local'}` });
 const mysql = require('mysql2/promise');
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'local'}` });
+
 
 const config = {
   host: process.env.DB_HOST,

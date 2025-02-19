@@ -1,14 +1,20 @@
 // app.js
 const express = require('express');
 const app = express();
+const httpAuthInterceptor = require('./middleware/HttpAuthInterceptor');
+const dotenv = require('dotenv');
+dotenv.config();
 
 app.use(express.json());
 
 const baseRoute = require('./routes/baseRoute');
-app.use('/node', baseRoute)
+app.use('/node', baseRoute);
 
 const studentRoute = require('./routes/studentRoute');
 app.use('/node/students', studentRoute);
+
+const chatRoute = require('./routes/chatRoute');
+app.use('/node/rooms', httpAuthInterceptor, chatRoute);
 
 // 전역 에러 핸들러
 app.use((err, req, res, next) => {
