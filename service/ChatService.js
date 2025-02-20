@@ -67,7 +67,7 @@ class ChatService {
     for (const studentId of notConnectedStudentIds) {
       const student = await ChatroomStudentRepository.findByChatroomAndStudentId(socket.roomId, studentId);
       if (student && student.exited === false) {
-        await this.sendPushNotification(studentId, socket.roomId, data.message);
+        await this.sendPushNotification(studentId, socket.roomId, 'text', data.message);
       }
     }
 
@@ -224,9 +224,9 @@ class ChatService {
     );
 
     for (const studentId of notConnectedStudentIds) {
-      const student = await ChatroomStudentRepository.findByChatroomAndStudentId(socket.roomId, studentId);
+      const student = await ChatroomStudentRepository.findByChatroomAndStudentId(roomId, studentId);
       if (student && student.exited === false) {
-        await this.sendPushNotification(studentId, socket.roomId, data.message);
+        await this.sendPushNotification(studentId, roomId, 'image', chat.message);
       }
     }
 
