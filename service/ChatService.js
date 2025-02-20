@@ -256,16 +256,17 @@ class ChatService {
 
   /**
    * 푸시 알림 전송
-   * @param {number} senderId - 메시지 발신자 ID
+   * @param receiverId
    * @param {number} chatroomId - 채팅방 ID
-   * @param {string} message - 메시지 내용
+   * @param {string} type - 메시지 type (예: "text", "image")
+   * @param {string} message - 메시지 내용 (text인 경우)
    */
-  async sendPushNotification(senderId, chatroomId, message) {
+  async sendPushNotification(receiverId, chatroomId, type, message) {
     try {
-      // 1. 채팅방에서 수신자(receiverId) 찾기
-      const receiverId = await ChatroomStudentRepository.findReceiverId(chatroomId, senderId);
-      if (!receiverId) {
-        console.warn(`${chatroomId}채팅룸에 참여하고 있는 학생이 없습니다.`);
+      // 1. 수신자의 학생 정보 조회
+      const receiver = await StudentRepository.getStudentById(receiverId);
+      if (!receiver) {
+        console.warn(`수신자의 학생 정보가 존재하지 않습니다.`);
         return;
       }
 
@@ -276,16 +277,17 @@ class ChatService {
         return;
       }
 
-      // 3. 수신자의 학생 정보 조회
-      const receiver = await StudentRepository.getStudentById(receiverId);
-      if (!receiver) {
-        console.warn(`수신자의 학생 정보가 존재하지 않습니다.`);
-        return;
-      }
-
-      // 4. 한국인 여부에 따라 제목 설정
+      // 3. 한국인 여부에 따라 제목 설정
       const title = receiver.korean ? "새로운 메시지가 도착했습니다." : "New Message";
-      const body = `${receiver.name} : ${message}`;
+
+      // 4. 메시지 타입에 따라 body 설정
+      let body;
+      if (type === "text") {
+        body = `${receiver.name} : ${message}`;
+      }
+      if (type === "image") {
+        body = receiver.korean ? "사진을 보냈습니다." : "Sent an image.";
+      }
 
       // 5. Expo Push Notification 메시지 생성
       const pushMessage = {
@@ -308,5 +310,4 @@ class ChatService {
     }
   }
 }
-
 module.exports = new ChatService();
