@@ -46,8 +46,9 @@ class ChatService {
     const timestamp = getFormattedTimestamp();
     const chat = this.buildChat(socket, data, timestamp);
 
-    this.broadcastChat(socket, chat, timestamp);
     await this.saveChat(chat);
+
+    this.broadcastChat(socket, chat, timestamp);
 
     await this.updateChatroomLastMessage(socket, chat, timestamp);
 
@@ -106,6 +107,7 @@ class ChatService {
    */
   broadcastChat(socket, chat, timestamp) {
     socket.to(socket.roomId.toString()).emit('message', {
+      id: chat.id,
       type: chat.type,
       roomId: socket.roomId,
       senderId: socket.studentId,
