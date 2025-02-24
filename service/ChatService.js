@@ -6,6 +6,8 @@ const S3UploadService = require('../service/S3UploadService');
 const Chat = require('../model/Chat');
 const chatNamespace = require("../socket/socketServer");
 const { expo } = require('../config/expoClient');
+const NotificationRepository = require('../repository/NotificationRepository');
+const StudentRepository = require('../repository/StudentRepository');
 
 /**
  * MySQL DATETIME 형식 (YYYY-MM-DD HH:MM:SS) 타임스탬프 생성 함수
@@ -60,6 +62,15 @@ class ChatService {
     const notConnectedStudentIds = uniqueAllStudentIds.filter(
       id => id !== socket.studentId && !connectedStudentIds.includes(id)
     );
+
+    // 연결되지 않은 학생들에게 각각 푸시 알림 전송
+    for (const studentId of notConnectedStudentIds) {
+      const student = await ChatroomStudentRepository.findByChatroomAndStudentId(socket.roomId, studentId);
+      if (student && student.exited === false) {
+        await this.sendPushNotification(studentId, socket.roomId, 'text', data.message);
+      }
+    }
+
     console.log('Students not connected in room:', notConnectedStudentIds);
 
     await this.updateUnreadCount(socket, notConnectedStudentIds);
@@ -132,9 +143,7 @@ class ChatService {
       const s = namespace.sockets.get(id);
       if (s && s.studentId && !connectedStudentIds.includes(s.studentId)) {
         connectedStudentIds.push(s.studentId);
-      } else{// 상대방이 채팅방에 없을 경우에 알림을 보낸다.
-        await this.sendPushNotification(socket.studentId, socket.roomId, message.message);
-      }
+      } 
     }
     return connectedStudentIds;
   }
@@ -213,6 +222,14 @@ class ChatService {
     const notConnectedStudentIds = uniqueAllStudentIds.filter(
       id => id !== userInfo.studentId && !connectedStudentIds.includes(id)
     );
+
+    for (const studentId of notConnectedStudentIds) {
+      const student = await ChatroomStudentRepository.findByChatroomAndStudentId(roomId, studentId);
+      if (student && student.exited === false) {
+        await this.sendPushNotification(studentId, roomId, 'image', chat.message);
+      }
+    }
+
     console.log('Students not connected in room:', notConnectedStudentIds);
     await this.updateUnreadCount({ roomId: roomId, studentId: userInfo.studentId }, notConnectedStudentIds);
 
@@ -239,36 +256,38 @@ class ChatService {
 
   /**
    * 푸시 알림 전송
-   * @param {number} senderId - 메시지 발신자 ID
+   * @param receiverId
    * @param {number} chatroomId - 채팅방 ID
-   * @param {string} message - 메시지 내용
+   * @param {string} type - 메시지 type (예: "text", "image")
+   * @param {string} message - 메시지 내용 (text인 경우)
    */
-  async sendPushNotification(senderId, chatroomId, message) {
+  async sendPushNotification(receiverId, chatroomId, type, message) {
     try {
-      // 1. 채팅방에서 수신자(receiverId) 찾기
-      const receiverId = await ChatroomStudentRepository.findReceiverId(chatroomId, senderId);
-      if (!receiverId) {
-        console.warn(`${chatroomId}채팅룸에 참여하고 있는 학생이 없습니다.`);
-        return;
-      }
-
-      // 2. 수신자의 ExpoToken 조회
-      const expoToken = await notificationRepository.getExpoTokenByStudentId(receiverId);
-      if (!expoToken) {
-        console.warn(`${receiverId}의 Expo토큰이 존재하지 않습니다.`);
-        return;
-      }
-
-      // 3. 수신자의 학생 정보 조회
-      const receiver = await studentRepository.getStudentById(receiverId);
+      // 1. 수신자의 학생 정보 조회
+      const receiver = await StudentRepository.getStudentById(receiverId);
       if (!receiver) {
         console.warn(`수신자의 학생 정보가 존재하지 않습니다.`);
         return;
       }
 
-      // 4. 한국인 여부에 따라 제목 설정
-      const title = receiver.isKorean ? "새로운 메시지가 도착했습니다." : "New Message";
-      const body = `${receiver.name} : ${message}`;
+      // 2. 수신자의 ExpoToken 조회
+      const expoToken = await NotificationRepository.getExpoTokenByStudentId(receiverId);
+      if (!expoToken) {
+        console.warn(`${receiverId}의 Expo토큰이 존재하지 않습니다.`);
+        return;
+      }
+
+      // 3. 한국인 여부에 따라 제목 설정
+      const title = receiver.korean ? "새로운 메시지가 도착했습니다." : "New Message";
+
+      // 4. 메시지 타입에 따라 body 설정
+      let body;
+      if (type === "text") {
+        body = `${receiver.name} : ${message}`;
+      }
+      if (type === "image") {
+        body = receiver.korean ? "사진을 보냈습니다." : "Sent an image.";
+      }
 
       // 5. Expo Push Notification 메시지 생성
       const pushMessage = {
@@ -291,5 +310,4 @@ class ChatService {
     }
   }
 }
-
 module.exports = new ChatService();
