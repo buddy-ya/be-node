@@ -228,7 +228,7 @@ class ChatService {
     for (const studentId of notConnectedStudentIds) {
       const student = await ChatroomStudentRepository.findByChatroomAndStudentId(roomId, studentId);
       if (student && student.exited === false) {
-        await this.sendPushNotification(socket.studentId, studentId, roomId, 'image', chat.message);
+        await this.sendPushNotification(userInfo.studentId, studentId, roomId, 'image', chat.message);
       }
     }
 
