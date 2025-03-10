@@ -272,8 +272,8 @@ class ChatService {
         console.warn(`수신자의 학생 정보가 존재하지 않습니다.`);
         return;
       }
-      // 2. 수신자의 ExpoToken 조회
 
+      // 2. 수신자의 ExpoToken 조회
       const expoToken = await NotificationRepository.getExpoTokenByStudentId(receiverId);
       if (!expoToken) {
         console.warn(`${receiverId}의 Expo토큰이 존재하지 않습니다.`);
