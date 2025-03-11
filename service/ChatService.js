@@ -303,7 +303,7 @@ class ChatService {
           chatroomId,
           type: "CHAT"
         }
-      };ㅑ
+      };
 
       // 6. 알림 전송
       const response = await expo.sendPushNotificationsAsync([pushMessage]);
