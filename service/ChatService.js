@@ -68,7 +68,7 @@ class ChatService {
     for (const studentId of notConnectedStudentIds) {
       const student = await ChatroomStudentRepository.findByChatroomAndStudentId(socket.roomId, studentId);
       if (student && student.exited === false) {
-        await this.sendPushNotification(socket.studentId, studentId, socket.roomId, 'text', data.message);
+        await this.sendPushNotification(studentId, socket.roomId, 'text', data.message);
       }
     }
 
@@ -173,6 +173,7 @@ class ChatService {
 
     // 1. 이미지 파일을 S3에 업로드하고 이미지 URL 획득
     const imageUrl = await S3UploadService.uploadFile('/chats', request.file);
+    console.log("S3로 부터 Image URL을 받고자함", imageUrl);
 
     // 2. 채팅(chat) 객체 생성 (클라이언트가 보낸 tempId 포함)
     const chatData = {
@@ -184,6 +185,8 @@ class ChatService {
     };
 
     const chat = new Chat(chatData);
+
+    console.log('chat 객체 생성', chat);
 
     // 3. DB에 채팅 객체 저장 및 생성된 id 반영
     const chatId = await ChatRepository.save(chat);
@@ -228,7 +231,7 @@ class ChatService {
     for (const studentId of notConnectedStudentIds) {
       const student = await ChatroomStudentRepository.findByChatroomAndStudentId(roomId, studentId);
       if (student && student.exited === false) {
-        await this.sendPushNotification(userInfo.studentId, studentId, roomId, 'image', chat.message);
+        await this.sendPushNotification(studentId, roomId, 'image', chat.message);
       }
     }
 
@@ -258,13 +261,12 @@ class ChatService {
 
   /**
    * 푸시 알림 전송
-   * @param {number} senderId - 메시지 보낸 사람 ID
-   * @param {number} receiverId - 메시지 받는 사람 ID
+   * @param receiverId
    * @param {number} chatroomId - 채팅방 ID
-   * @param {string} type - 메시지 타입 ("text", "image")
-   * @param {string} message - 메시지 내용 (type이 "text"일 경우)
+   * @param {string} type - 메시지 type (예: "text", "image")
+   * @param {string} message - 메시지 내용 (text인 경우)
    */
-  async sendPushNotification(senderId, receiverId, chatroomId, type, message) {
+  async sendPushNotification(receiverId, chatroomId, type, message) {
     try {
       // 1. 수신자의 학생 정보 조회
       const receiver = await StudentRepository.getStudentById(receiverId);
@@ -284,10 +286,9 @@ class ChatService {
       const title = receiver.korean ? "새로운 메시지가 도착했습니다." : "New Message";
 
       // 4. 메시지 타입에 따라 body 설정
-      const sender = await StudentRepository.getStudentById(senderId);
       let body;
       if (type === "text") {
-        body = `${sender.name} : ${message}`;
+        body = `${receiver.name} : ${message}`;
       }
       if (type === "image") {
         body = receiver.korean ? "사진을 보냈습니다." : "Sent an image.";
@@ -302,7 +303,7 @@ class ChatService {
           chatroomId,
           type: "CHAT"
         }
-      };
+      };ㅑ
 
       // 6. 알림 전송
       const response = await expo.sendPushNotificationsAsync([pushMessage]);
