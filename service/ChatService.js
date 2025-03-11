@@ -169,6 +169,7 @@ class ChatService {
    * @returns {Promise<object>} - 생성된 이미지 chat 객체
    */
   async chatUploadImage(roomId, userInfo, request) {
+    console.log("CHAT 이미지 요청!");
     const timestamp = getFormattedTimestamp();
 
     // 1. 이미지 파일을 S3에 업로드하고 이미지 URL 획득

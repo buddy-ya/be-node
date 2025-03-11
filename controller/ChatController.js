@@ -5,10 +5,10 @@ class ChatController {
   // 채팅방 이미지 업로드 처리
   async uploadImages(req, res, next) {
     try {
+      console.log("채팅방 이미지 요청!");
       const roomId = req.params.roomId;
       const tempId = req.body.tempId;
       const file = req.file; 
-
       const userInfo = req.decoded; // 인증 미들웨어에서 설정된 사용자 정보
       if (!userInfo) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -20,6 +20,7 @@ class ChatController {
         chat
       });
     } catch (error) {
+      console.error(error);
       next(error);
     }
   }
