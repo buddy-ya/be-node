@@ -9,7 +9,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * 이미지 업로드 엔드포인트
- * URL 예시: POST /node/chat/:roomId/image
  * 클라이언트는 FormData로 "image" 필드에 파일과 "tempId" 등을 전송합니다.
  */
 

@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../config/jwtConfig'); // JWT_SECRET은 Base64 인코딩된 문자열
-const TokenError = require('../common/exception/TokenError');
-const TokenErrorType = require('../common/exception/TokenErrorType');
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config/jwtConfig"); // JWT_SECRET은 Base64 인코딩된 문자열
+const TokenError = require("../common/exception/TokenError");
+const TokenErrorType = require("../common/exception/TokenErrorType");
 
 /**
  * HTTP 요청에 대한 JWT 토큰 검증 미들웨어.
@@ -13,31 +13,34 @@ const TokenErrorType = require('../common/exception/TokenErrorType');
  */
 function httpAuthInterceptor(req, res, next) {
   let token = req.headers.authorization;
-  
+  console.log("토큰 헤더", token);
+
   // 토큰이 없으면 에러 반환
   if (!token) {
     return next(new TokenError(TokenErrorType.EMPTY_CLAIMS));
   }
-  
+
   // "Bearer " 접두어 제거
-  if (token.startsWith('Bearer ')) {
+  if (token.startsWith("Bearer ")) {
     token = token.slice(7).trim();
   }
   token = token.trim();
-  
+
   try {
     // Base64로 인코딩된 JWT_SECRET을 Buffer로 변환
-    const secretKey = Buffer.from(JWT_SECRET, 'base64');
+    const secretKey = Buffer.from(JWT_SECRET, "base64");
     // JWT 검증 (알고리즘 HS256 사용)
-    const decoded = jwt.verify(token, secretKey, { algorithms: ['HS256'] });
+    const decoded = jwt.verify(token, secretKey, { algorithms: ["HS256"] });
     // 검증 성공 시, 디코딩된 토큰 정보를 req.user에 저장
     req.decoded = decoded;
     req.studentId = decoded.studentId;
+    console.log("토큰 헤더 검출 성공", req.studentId);
     return next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
+    console.log("토큰에서 에러 발생!");
+    if (error.name === "TokenExpiredError") {
       return next(new TokenError(TokenErrorType.EXPIRED_TOKEN));
-    } 
+    }
     return next(new TokenError(TokenErrorType.INVALID_TOKEN));
   }
 }
