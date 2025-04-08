@@ -302,6 +302,8 @@ class ChatService {
         to: expoToken,
         title,
         body,
+        priority: 'high',
+        channelId: 'default',
         data: {
           chatroomId,
           type: "CHAT"
