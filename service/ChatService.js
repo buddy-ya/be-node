@@ -304,6 +304,7 @@ class ChatService {
         body,
         priority: 'high',
         channelId: 'default',
+        sound: 'default',
         data: {
           chatroomId,
           type: "CHAT"
