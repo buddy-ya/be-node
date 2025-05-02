@@ -3,7 +3,9 @@ const express = require("express");
 const app = express();
 const httpAuthInterceptor = require("./middleware/HttpAuthInterceptor");
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({
+  path: `.env.${process.env.NODE_ENV}`,
+});
 
 app.use(express.json());
 
