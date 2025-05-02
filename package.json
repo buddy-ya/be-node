@@ -6,6 +6,7 @@
     "start": "NODE_ENV=local node socket/socketServer.js",
     "start:local": "NODE_ENV=local node socket/socketServer.js",
     "start:dev": "NODE_ENV=dev node socket/socketServer.js",
+    "start:main": "NODE_ENV=main node socket/socketServer.js",
     "dev": "nodemon socket/socketServer.js"
   },
   "dependencies": {
