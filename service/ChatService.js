@@ -4,7 +4,6 @@ const ChatroomRepository = require("../repository/ChatroomRepository");
 const ChatroomStudentRepository = require("../repository/ChatroomStudentRepository");
 const S3UploadService = require("../service/S3UploadService");
 const Chat = require("../model/Chat");
-const chatNamespace = require("../socket/socketServer");
 const { expo } = require("../config/expoClient");
 const NotificationRepository = require("../repository/NotificationRepository");
 const StudentRepository = require("../repository/StudentRepository");
@@ -48,7 +47,7 @@ class ChatService {
 
     await this.saveChat(chat);
 
-    this.broadcastChat(socket, chat, timestamp);
+    this.broadcastChat(namespace, socket, chat, timestamp);
 
     await this.updateChatroomLastMessage(socket, chat, timestamp);
 
@@ -117,7 +116,7 @@ class ChatService {
   /**
    * 같은 방(roomId)에 있는 다른 클라이언트에 채팅(chat) 브로드캐스트 (송신자 제외)
    */
-  broadcastChat(socket, chat, timestamp) {
+  broadcastChat(namespace, socket, chat, timestamp) {
     const payload = {
       id: chat.id,
       type: chat.type,
@@ -127,7 +126,7 @@ class ChatService {
       message: chat.message,
       createdDate: timestamp,
     };
-    chatNamespace.in(socket.roomId.toString()).emit("message", payload);
+    namespace.in(socket.roomId.toString()).emit("message", payload);
   }
 
   /**
