@@ -118,7 +118,7 @@ class ChatService {
    * 같은 방(roomId)에 있는 다른 클라이언트에 채팅(chat) 브로드캐스트 (송신자 제외)
    */
   broadcastChat(socket, chat, timestamp) {
-    socket.to(socket.roomId.toString()).emit("message", {
+    const payload = {
       id: chat.id,
       type: chat.type,
       roomId: socket.roomId,
@@ -126,7 +126,8 @@ class ChatService {
       tempId: chat.tempId,
       message: chat.message,
       createdDate: timestamp,
-    });
+    };
+    chatNamespace.in(socket.roomId.toString()).emit("message", payload);
   }
 
   /**
@@ -210,11 +211,7 @@ class ChatService {
     chat.id = chatId;
 
     // 4. 채팅방의 마지막 메시지 업데이트 ("사진을 보냈습니다")
-    await ChatroomRepository.updateLastMessage(
-      roomId,
-      "사진을 보냈습니다",
-      timestamp
-    );
+    await ChatroomRepository.updateLastMessage(roomId, "Image", timestamp);
 
     // 5. 브로드캐스트 준비: 클라이언트가 요구하는 응답 형식으로 payload 구성
     const chatNamespace = require("../socket/socketServer");
@@ -231,12 +228,7 @@ class ChatService {
 
     // 6. 동일 채팅방에 연결된 다른 소켓(송신자 제외)에게 브로드캐스트
     try {
-      const sockets = await chatNamespace.in(roomId.toString()).fetchSockets();
-      sockets.forEach((socket) => {
-        if (socket.studentId !== userInfo.studentId) {
-          socket.emit("message", payload);
-        }
-      });
+      chatNamespace.in(roomId.toString()).emit("message", payload);
     } catch (err) {
       console.error("Error broadcasting image chat:", err);
     }
