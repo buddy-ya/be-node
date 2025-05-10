@@ -13,7 +13,6 @@ const TokenErrorType = require("../common/exception/TokenErrorType");
  */
 function httpAuthInterceptor(req, res, next) {
   let token = req.headers.authorization;
-  console.log("토큰 헤더", token);
 
   // 토큰이 없으면 에러 반환
   if (!token) {
@@ -34,10 +33,8 @@ function httpAuthInterceptor(req, res, next) {
     // 검증 성공 시, 디코딩된 토큰 정보를 req.user에 저장
     req.decoded = decoded;
     req.studentId = decoded.studentId;
-    console.log("토큰 헤더 검출 성공", req.studentId);
     return next();
   } catch (error) {
-    console.log("토큰에서 에러 발생!");
     if (error.name === "TokenExpiredError") {
       return next(new TokenError(TokenErrorType.EXPIRED_TOKEN));
     }
