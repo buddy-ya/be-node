@@ -9,6 +9,7 @@ const io = new Server(server, {
   pingInterval: 25000, // 25초마다 ping 전송
   pingTimeout: 60000, // 60초 동안 pong 응답이 없으면 연결 해제
   transports: ["websocket"],
+  maxHttpBufferSize: 10 * 1024 * 1024,
 });
 
 // 상위 디렉터리의 middleware 폴더에서 SocketAuthInterceptor 불러오기
