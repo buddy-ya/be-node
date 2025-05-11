@@ -210,7 +210,7 @@ class ChatService {
     chat.id = chatId;
 
     // 4. 채팅방의 마지막 메시지 업데이트 ("사진을 보냈습니다")
-    await ChatroomRepository.updateLastMessage(roomId, "Image", timestamp);
+    await ChatroomRepository.updateLastMessage(roomId, "Send Image", timestamp);
 
     // 5. 브로드캐스트 준비: 클라이언트가 요구하는 응답 형식으로 payload 구성
     const chatNamespace = require("../socket/socketServer");
