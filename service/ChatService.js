@@ -4,7 +4,6 @@ const ChatroomRepository = require("../repository/ChatroomRepository");
 const ChatroomStudentRepository = require("../repository/ChatroomStudentRepository");
 const S3UploadService = require("../service/S3UploadService");
 const Chat = require("../model/Chat");
-const chatNamespace = require("../socket/socketServer");
 const { expo } = require("../config/expoClient");
 const NotificationRepository = require("../repository/NotificationRepository");
 const StudentRepository = require("../repository/StudentRepository");
@@ -48,7 +47,7 @@ class ChatService {
 
     await this.saveChat(chat);
 
-    this.broadcastChat(socket, chat, timestamp);
+    this.broadcastChat(namespace, socket, chat, timestamp, data.tempId);
 
     await this.updateChatroomLastMessage(socket, chat, timestamp);
 
@@ -117,17 +116,17 @@ class ChatService {
   /**
    * 같은 방(roomId)에 있는 다른 클라이언트에 채팅(chat) 브로드캐스트 (송신자 제외)
    */
-  broadcastChat(socket, chat, timestamp) {
+  broadcastChat(namespace, socket, chat, timestamp, tempId) {
     const payload = {
       id: chat.id,
       type: chat.type,
       roomId: socket.roomId,
       senderId: socket.studentId,
-      tempId: chat.tempId,
+      tempId: tempId,
       message: chat.message,
       createdDate: timestamp,
     };
-    chatNamespace.in(socket.roomId.toString()).emit("message", payload);
+    namespace.in(socket.roomId.toString()).emit("message", payload);
   }
 
   /**
@@ -211,7 +210,7 @@ class ChatService {
     chat.id = chatId;
 
     // 4. 채팅방의 마지막 메시지 업데이트 ("사진을 보냈습니다")
-    await ChatroomRepository.updateLastMessage(roomId, "Image", timestamp);
+    await ChatroomRepository.updateLastMessage(roomId, "Send Image", timestamp);
 
     // 5. 브로드캐스트 준비: 클라이언트가 요구하는 응답 형식으로 payload 구성
     const chatNamespace = require("../socket/socketServer");
