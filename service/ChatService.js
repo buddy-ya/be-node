@@ -47,7 +47,7 @@ class ChatService {
 
     await this.saveChat(chat);
 
-    this.broadcastChat(namespace, socket, chat, timestamp);
+    this.broadcastChat(namespace, socket, chat, timestamp, data.tempId);
 
     await this.updateChatroomLastMessage(socket, chat, timestamp);
 
@@ -116,13 +116,13 @@ class ChatService {
   /**
    * 같은 방(roomId)에 있는 다른 클라이언트에 채팅(chat) 브로드캐스트 (송신자 제외)
    */
-  broadcastChat(namespace, socket, chat, timestamp) {
+  broadcastChat(namespace, socket, chat, timestamp, tempId) {
     const payload = {
       id: chat.id,
       type: chat.type,
       roomId: socket.roomId,
       senderId: socket.studentId,
-      tempId: chat.tempId,
+      tempId: tempId,
       message: chat.message,
       createdDate: timestamp,
     };
